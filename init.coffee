@@ -6,7 +6,7 @@
 # Includes
 irc    = require('irc')
 utils  = require('./utils')
-config = require('.config').config
+config = require('./config').config
 
 utils.log 'Starting bot...'
 # Set up our bot
