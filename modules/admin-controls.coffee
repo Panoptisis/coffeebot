@@ -30,3 +30,11 @@ exports.init = (client) ->
 		else if command.command is 'quit' or command.command is 'exit'
 			utils.log 'Quit command issued by admin'
 			client.disconnect()
+
+		else if command.command is 'say'
+			client.sayBack nick, to, command.input
+
+		else if command.command is 'sayto'
+			to = command.input.split(' ').splice(0, 1)[0]
+			msg = command.input.substr(to.length)
+			client.say to, msg
