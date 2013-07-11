@@ -1,0 +1,10 @@
+###
+ Config
+###
+
+exports.config =
+	server:   'irc.awesomeplace.net'
+	nick:     'My bot'
+	channels: ['#somechannel']
+	password: 'ns password'
+	debug:    false
