@@ -39,6 +39,10 @@ client.addListener 'registered', (message) ->
 	utils.log "Joined #{config.channels.length} channel(s)"
 
 
+# Attach configs to the client for easy access
+client.config = config
+
+
 # Create a nice helper method on the bot
 client.sayBack = (from, to, message) ->
 	to = from if to is config.nick
@@ -63,6 +67,11 @@ client.parseCmd = (message) ->
 		command.input = parts.join(' ')
 
 	return command
+
+
+# Determins whether or not the given nick can control this bot
+client.isAdmin = (nick) ->
+	return nick is this.config.admin
 
 
 # Print debug messages

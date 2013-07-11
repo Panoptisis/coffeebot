@@ -19,3 +19,9 @@ exports.log = (message) ->
 	stamp = ddpad(date.getHours()) + ':' + ddpad(date.getMinutes()) + ':' + ddpad(date.getSeconds())
 
 	console.log "[#{stamp}] #{message}"
+
+exports.replace = (str, messages) ->
+	for own name,value of messages
+		find = new RegExp('{{' + name + '}}', 'g')
+		str = str.replace(find, value)
+	return str

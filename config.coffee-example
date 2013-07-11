@@ -8,3 +8,4 @@ exports.config =
 	channels: ['#somechannel']
 	password: 'ns password'
 	debug:    false
+	admin:    'YourNick'
