@@ -19,13 +19,10 @@ incrementVote = (vote, id) ->
 
 
 exports.init = (client) ->
-	client.addListener 'message', (nick, to, text, message) ->
+	client.addListener 'message#', (nick, to, text, message) ->
 		
 		command = client.parseCmd text
 		return if not command
-
-		# Ignore PMs
-		return if to.substr(0, 1) isnt '#'
 
 		# Get the vote object for this channel
 		vote = votes[to]
