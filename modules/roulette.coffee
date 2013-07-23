@@ -1,6 +1,6 @@
 ###
- Simple Games
-  - Provides some simple games
+ Roulette
+  - Provides the roulette game
 ###
 
 utils = require '../utils'

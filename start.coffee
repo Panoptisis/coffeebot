@@ -7,6 +7,6 @@ modules = require('./modules').loader
 modules bot, [
 		'test'
 		'admin-controls'
-		'simple-games'
+		'roulette'
 		'vote'
 	]
