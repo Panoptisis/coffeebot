@@ -26,7 +26,6 @@ exports.init = (client) ->
 
 		# Get the vote object for this channel
 		vote = votes[to]
-		console.log vote
 
 		if command.command is 'callvote'
 
