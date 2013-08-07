@@ -9,4 +9,5 @@ modules bot, [
 		'admin-controls'
 		'roulette'
 		'vote'
+		'monopoly'
 	]
