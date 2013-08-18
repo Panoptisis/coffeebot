@@ -372,16 +372,32 @@ class Game
 			# If this location has a handler, do things
 			if location.handler
 				location.handler()
-			# Otherwise, end the turn
-			else
-				@endTurn()
-		else
-			@endTurn()
+				return
+
+		# Otherwise, end the turn
+		@endTurn()
 	
 	# Community Chest cards
 	locationCommunityChest: =>
-		# TODO
-		return
+		# Draw a community card
+		cardId = @communityChestDeck.shift()
+		card = @communityChestCards[cardId]
+		@say "You draw a Community Chest card and it reads \"#{card.label}\"."
+
+		# If this isn't a jail free card, push it on the end of the deck
+		if cardId isnt 4
+			@communityChestDeck.push cardId
+		
+		# If true, we need to replay landing on a space. Otherwise end the turn
+		if card.handler @getCurrentPlayer()
+			location = @getCurrentPlayerLocation()
+			# If this location has a handler, do things
+			if location.handler
+				location.handler()
+				return
+
+		# Otherwise, end the turn
+		@endTurn()
 
 	# The player wants to purchase this property
 	triggerPropertyPurchase: =>
@@ -960,10 +976,10 @@ class Game
 				location.handler = @locationLuxuryTax
 			else if data.type is 'go to jail'
 				location.handler = @locationGoToJail
-			# else if data.type is 'chance'
-			# 	location.handler = @locationChance
-			# else if data.type is 'community'
-			# 	location.handler = @locationCommunityChest
+			else if data.type is 'chance'
+				location.handler = @locationChance
+			else if data.type is 'community'
+				location.handler = @locationCommunityChest
 
 			@board.push(location)
 
@@ -1066,7 +1082,8 @@ class Game
 				text: 'You have been elected Chairman of the Board - Pay each player $50'
 				handler: (player) =>
 					for otherPlayer in @players
-						if otherPlayer.nick isnt player.nick
+						if otherPlayer.nick isnt player.nick and
+								otherPlayer.isPlaying()
 							player.removeMoney 50, otherPlayer
 							if player.bankrupt
 								return false
@@ -1087,14 +1104,118 @@ class Game
 	initCommunityChest: =>
 		@communityChestCards = [
 			{
-				label: ''
+				text: 'Advance to Go'
 				handler: (player) =>
-					
+					@movePlayerTo player, 0
+					return false
 			}
 			{
-				label: ''
+				label: 'Bank error in your favor - Collect $200'
 				handler: (player) =>
-
+					player.money += 200
+					return false
+			}
+			{
+				label: 'Doctor\'s fees - Pay $50'
+				handler: (player) =>
+					player.money += 50
+					return false
+			}
+			{
+				label: 'From sale of stock you get $50'
+				handler: (player) =>
+					player.money += 50
+					return false
+			}
+			{
+				label: 'Get Out of Jail Free'
+				handler: (player) =>
+					player.jailCardCommunity = true
+					return false
+			}
+			{
+				label: 'Go to Jail'
+				handler: (player) =>
+					@movePlayerToJail player
+					return false
+			}
+			{
+				label: 'Grand Opera Night - Collect $50 from each player for opening night seats'
+				handler: (player) =>
+					for otherPlayer in @players
+						if otherPlayer.nick isnt player.nick and
+								otherPlayer.isPlaying()
+							otherPlayer.removeMoney 50, player
+							if not otherPlayer.bankrupt
+								player.money += 50
+					return false
+			}
+			{
+				label: 'Holiday Fund matures - Collect $100'
+				handler: (player) =>
+					player.money += 100
+					return false
+			}
+			{
+				label: 'Income tax refund - Collect $20'
+				handler: (player) =>
+					player.money += 20
+					return false
+			}
+			{
+				label: 'It is your birthday - Collect $10 from each player'
+				handler: (player) =>
+					for otherPlayer in @players
+						if otherPlayer.nick isnt player.nick and
+								otherPlayer.isPlaying()
+							otherPlayer.removeMoney 10, player
+							if not otherPlayer.bankrupt
+								player.money += 10
+					return false
+			}
+			{
+				label: 'Life insurance matures - Collection $100'
+				handler: (player) =>
+					player.money += 100
+					return false
+			}
+			{
+				label: 'Pay hospital fees of $100'
+				handler: (player) =>
+					player.removeMoney 100
+					return false
+			}
+			{
+				label: 'Pay school fees of $150'
+				handler: (player) =>
+					player.removeMoney 150
+					return false
+			}
+			{
+				label: 'Receive $25 consultancy fee'
+				handler: (player) =>
+					player.money += 25
+					return false
+			}
+			{
+				label: 'You are assessed for street repairs - $40 per house - $115 per hotel'
+				handler: (player) =>
+					amount = 40 * player.getHouseCount()
+					amount += 115 * player.getHotelCount()
+					player.removeMoney amount
+					return false
+			}
+			{
+				label: 'You have won second prize in a beauty contest - Collect $10'
+				handler: (player) =>
+					player.money += 10
+					return false
+			}
+			{
+				label: 'You inherit $100'
+				handler: (player) =>
+					player.money += 100
+					return false
 			}
 		]
 
@@ -1141,6 +1262,11 @@ class Player
 			location = game.getLocation propertyId
 			hotels += location.hotels
 		return hotels
+
+	# Determines whether or not a player is still "playing"
+	isPlaying: =>
+		# TODO: Handle idle
+		return !@bankrupt
 
 	# Removes money and triggers bankruptcy if neccessary
 	removeMoney: (amount, otherPlayer) =>
