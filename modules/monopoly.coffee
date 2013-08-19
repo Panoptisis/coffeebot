@@ -145,6 +145,18 @@ exports.init = (client) ->
 				game.processBuildHotel player, command.input
 			return
 
+		# Unimprove property
+		if command.command is 'unimprove'
+			if not command.input
+				game.say 'You must provide the ID of the property to unimprove.'
+			else
+				args = command.input.split ' '
+				if args.length == 1
+					game.processUnimprove player, args[0], null
+				else
+					game.processUnimprove player, args[0], args[1]
+			return
+
 		# Starts a trade
 		if command.command is 'sell'
 			# item player price
@@ -476,7 +488,7 @@ class Game
 
 	# Takes out a mortgage on a property
 	processMortgage: (player, propertyId) =>
-		location = @getLocation (propertyId|0)
+		location = @getLocation(propertyId|0)
 
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
@@ -498,7 +510,7 @@ class Game
 
 	# Allows the user to pay off a mortgage
 	processPayMortgage: (player, propertyId) =>
-		location = @getLocation (propertyId|0)
+		location = @getLocation(propertyId|0)
 
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
@@ -522,7 +534,7 @@ class Game
 
 	# Builds a house on a property
 	processBuildHouse: (player, propertyId) =>
-		location = @getLocation (propertyId|0)
+		location = @getLocation(propertyId|0)
 
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
@@ -561,7 +573,7 @@ class Game
 
 	# Builds a hotel on this property
 	processBuildHotel: (player, propertyId) =>
-		location = @getLocation (propertyId|0)
+		location = @getLocation(propertyId|0)
 
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
@@ -599,9 +611,32 @@ class Game
 		@houses += 4
 		@hotels--
 
+	# Process removing homes and hotels from a property
+	processUnimprove: (player, propertyId, stages) =>
+		location = @getLocation(propertyId|0)
+		if stages is null
+			stages = 1
+		else
+			stages = stages|0
+
+		if not location or location.type isnt 'property'
+			@say 'Invalid property ID.'
+			return
+		if location.isUnimproved()
+			@say 'This property is already unimproved.'
+			return
+		if location.owner isnt player.nick
+			@say 'You cannot unimprove a property you do not own.'
+			return
+
+		if location.houses + 4 * location.hotels < stages
+			@say "You cannot unimprove that property #{stages} times."
+
+		# TODO: Finish this
+
 	# Process the start of a trade
 	processTradeInit: (player, propertyId, nick, amount) =>
-		location = @getLocation (propertyId|0)
+		location = @getLocation(propertyId|0)
 		otherPlayer = @findPlayer nick
 		amount = (amount|0)
 
