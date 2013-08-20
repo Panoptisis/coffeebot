@@ -87,7 +87,7 @@ exports.init = (client) ->
 				return
 
 			if nick isnt vote.starter and not client.isAdmin nick
-				client.sayBack nick, to, "Only #{starter} can end the vote."
+				client.sayBack nick, to, "Only #{vote.starter} can end the vote."
 				return
 
 			client.sayBack nick, to, 'The vote has ended. Here are the results:'
