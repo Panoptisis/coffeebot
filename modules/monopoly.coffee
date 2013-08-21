@@ -153,6 +153,14 @@ exports.init = (client) ->
 				game.processUnimprove player, command.input
 			return
 
+		# Unimprove property group
+		if command.command is 'unimprove-group'
+			if not command.input
+				game.say 'You must provide name of the property group to unimprove.'
+			else
+				game.processUnimproveGroup player, command.input
+			return
+
 		# Starts a trade
 		if command.command is 'sell'
 			# item player price
@@ -614,6 +622,9 @@ class Game
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
 			return
+		if not location.isImprovable()
+			@say 'This property cannot be improved or unimproved.'
+			return
 		if location.isUnimproved()
 			@say 'This property is already unimproved.'
 			return
@@ -641,6 +652,33 @@ class Game
 			location.houses--
 			player.money += Math.floor(location.getHouseCost() * 0.5)
 		@say "#{location.label} has been unimproved by one level."
+
+	# Unimproves a whole property group if the player owns it
+	processUnimproveGroup: (player, group) =>
+		group = group.toLowerCase()
+
+		if not (group in @boardGroups)
+			@say 'Invalid group.'
+			return
+		if not @ownsGroup player, group
+			@say 'You cannot unimprove a group of properties you do not own.'
+			return
+		if @unimprovedGroup group
+			@say 'This group is already unimproved.'
+			return
+
+		for locationId in @boardGroups[group]
+			location = @getLocation locationId
+
+			if location.hotels is 1
+				@hotels++
+				player.money += Math.floor(location.getHotelCost() * 0.5) + 4 * Math.floor(location.getHouseCost() * 0.5)
+			else
+				@houses += location.houses
+				player.money += location.houses * Math.floor(location.getHouseCost() * 0.5)
+			location.hotels = 0
+			location.houses = 0
+		@say "Property group '#{group}' has been completely unimproved."
 
 	# Process the start of a trade
 	processTradeInit: (player, propertyId, nick, amount) =>
