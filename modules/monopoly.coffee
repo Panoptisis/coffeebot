@@ -150,11 +150,7 @@ exports.init = (client) ->
 			if not command.input
 				game.say 'You must provide the ID of the property to unimprove.'
 			else
-				args = command.input.split ' '
-				if args.length == 1
-					game.processUnimprove player, args[0], null
-				else
-					game.processUnimprove player, args[0], args[1]
+				game.processUnimprove player, command.input
 			return
 
 		# Starts a trade
@@ -612,12 +608,8 @@ class Game
 		@hotels--
 
 	# Process removing homes and hotels from a property
-	processUnimprove: (player, propertyId, stages) =>
+	processUnimprove: (player, propertyId) =>
 		location = @getLocation(propertyId|0)
-		if stages is null
-			stages = 1
-		else
-			stages = stages|0
 
 		if not location or location.type isnt 'property'
 			@say 'Invalid property ID.'
@@ -629,10 +621,26 @@ class Game
 			@say 'You cannot unimprove a property you do not own.'
 			return
 
-		if location.houses + 4 * location.hotels < stages
-			@say "You cannot unimprove that property #{stages} times."
+		max = @groupMaxImprovement(location.group)
+		if location.houses + 5 * location.hotels < max
+			plural = if location.houses is 1 then 'house' else 'houses'
+			@say "All properties in this group must have no more than #{location.houses} #{plural} before this property can be unimproved"
+			return
 
-		# TODO: Finish this
+		if location.hotels is 1
+			if @houses < 4
+				@say 'There are not enough houses available to downgrade with.'
+				return
+			@hotels++
+			@houses -= 4
+			location.hotels = 0
+			location.houses = 4
+			player.money += Math.floor(location.getHotelCost() * 0.5)
+		else
+			@houses++
+			location.houses--
+			player.money += Math.floor(location.getHouseCost() * 0.5)
+		@say "#{location.label} has been unimproved by one level."
 
 	# Process the start of a trade
 	processTradeInit: (player, propertyId, nick, amount) =>
@@ -797,6 +805,15 @@ class Game
 			location = @getLocation locationId
 			min = location.houses if location.houses < min
 		return min
+
+	# Calculates the highest improvement value for this group
+	groupMaxImprovement: (group) =>
+		max = 0
+		for locationId in @boardGroups[group]
+			location = @getLocation locationId
+			score = location.houses + 5 * location.hotels
+			max = score if score > max
+		return max
 
 	# Checks to see if all of the property in this group is unimproved
 	unimprovedGroup: (group) =>
